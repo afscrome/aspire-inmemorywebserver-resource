@@ -4,8 +4,7 @@
     <OutputType>Exe</OutputType>
     <UserSecretsId>4141572c-1ce1-424e-9687-ae8f34991b67</UserSecretsId>
     <OutputType>Library</OutputType>
-    <!-- enable xml docs-->
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!--<GenerateDocumentationFile>true</GenerateDocumentationFile>-->
   </PropertyGroup>
 
   <ItemGroup>
