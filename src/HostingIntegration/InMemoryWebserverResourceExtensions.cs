@@ -32,7 +32,9 @@ public static class InMemoryWebserverResourceExtensions
                 ResourceType = "InMemoryWebServer",
                 CreationTimeStamp = DateTime.UtcNow,
                 State = KnownResourceStates.NotStarted,
-                Properties = []
+                Properties = [
+                    new(CustomResourceKnownProperties.Source, ".")
+                ]
             })
             .WithOtlpExporter()
             .OnInitializeResource(Initialise)
@@ -50,14 +52,12 @@ public static class InMemoryWebserverResourceExtensions
             var executionConfiguration = await GetExecutionConfig();
 
 
-
-            var envVarSnapshot = executionConfiguration.EnvironmentVariables.Select(x => new EnvironmentVariableSnapshot(x.Key, x.Value, true)).ToImmutableArray();
-
             await evt.Notifications.PublishUpdateAsync(resource, s => s with
             {
                 StartTimeStamp = DateTime.UtcNow,
                 State = KnownResourceStates.Starting,
-                EnvironmentVariables = envVarSnapshot
+                EnvironmentVariables = executionConfiguration.EnvironmentVariables.Select(x => new EnvironmentVariableSnapshot(x.Key, x.Value, true)).ToImmutableArray(),
+                Properties = SetArgumentProperties(s.Properties, executionConfiguration)
             });
 
             async Task<IExecutionConfigurationResult> GetExecutionConfig()
@@ -69,6 +69,25 @@ public static class InMemoryWebserverResourceExtensions
 
                 var executionContext = evt.Services.GetRequiredService<DistributedApplicationExecutionContext>();
                 return await executionConfigurationBuilder.BuildAsync(executionContext, evt.Logger, ct);
+            }
+
+            static ImmutableArray<ResourcePropertySnapshot> SetArgumentProperties(
+                ImmutableArray<ResourcePropertySnapshot> existing,
+                IExecutionConfigurationResult configurationResult)
+            {
+                // From internal  `KnownProperties.Resource` strings
+                const string AppArgsPropertyName = "resource.appArgs";
+                const string AppArgsSensitivityPropertyName = "resource.appArgsSensitivity";
+
+                var args = configurationResult.Arguments.Select(x => x.Value).ToImmutableArray();
+                var argSensitivity = configurationResult.Arguments.Select(x => Convert.ToInt32(x.IsSensitive)).ToImmutableArray();
+                bool isSensitive = configurationResult.Arguments.Any(x => x.IsSensitive);
+
+                return [
+                    .. existing.Where(p => p.Name is not AppArgsPropertyName and not AppArgsSensitivityPropertyName),
+                    new ResourcePropertySnapshot(AppArgsPropertyName, args) { IsSensitive = isSensitive },
+                    new ResourcePropertySnapshot(AppArgsSensitivityPropertyName, argSensitivity)
+                ];
             }
 
             async Task<WebApplicationBuilder> CreateInitialBuilder()
