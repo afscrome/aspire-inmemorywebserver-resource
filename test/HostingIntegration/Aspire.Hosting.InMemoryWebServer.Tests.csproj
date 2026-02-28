@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="TUnit" Version="1.*" />
-    <PackageReference Include="Aspire.Hosting" Version="13.3.0-preview.1.26127.10" />
+    <PackageReference Include="TUnit" />
+    <PackageReference Include="Aspire.Hosting" />
   </ItemGroup>
 
 </Project>

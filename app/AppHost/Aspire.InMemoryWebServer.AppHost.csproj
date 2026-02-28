@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.JavaScript" Version="13.3.0-preview.1.26127.10" />
-    <PackageReference Include="Aspire.Hosting.Redis" Version="13.3.0-preview.1.26127.10" />
+    <PackageReference Include="Aspire.Hosting.JavaScript" />
+    <PackageReference Include="Aspire.Hosting.Redis" />
   </ItemGroup>
 </Project>
