@@ -14,7 +14,7 @@ using Microsoft.Extensions.Options;
 using OpenTelemetry;
 using System.Collections.Immutable;
 using System.Net;
-
+using My.Namespace;
 #pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace Aspire.Hosting;
 #pragma warning restore IDE0130 // Namespace does not match folder structure
