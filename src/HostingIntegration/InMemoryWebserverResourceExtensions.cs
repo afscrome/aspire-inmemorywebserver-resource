@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -40,10 +41,6 @@ public static class InMemoryWebserverResourceExtensions
 
         async Task Initialise(InMemoryWebserverResource resource, InitializeResourceEvent evt, CancellationToken ct)
         {
-#pragma warning disable ASPIRECERTIFICATES001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-            var developerCertificateService = evt.Services.GetRequiredService<IDeveloperCertificateService>();
-#pragma warning restore ASPIRECERTIFICATES001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-
             var endpoint = resource.GetEndpoint("https");
             var endpointAnnotation = endpoint.EndpointAnnotation;
 
@@ -69,31 +66,36 @@ public static class InMemoryWebserverResourceExtensions
                     .WithEnvironmentVariablesConfig()
                     .WithArgumentsConfig();
 
+
                 var executionContext = evt.Services.GetRequiredService<DistributedApplicationExecutionContext>();
                 return await executionConfigurationBuilder.BuildAsync(executionContext, evt.Logger, ct);
             }
 
             async Task<WebApplicationBuilder> CreateInitialBuilder()
             {
-                var args = executionConfiguration.Arguments.Select(x => x.Value).ToArray();
-                var builder = WebApplication.CreateBuilder(args);
+                var builder = WebApplication.CreateBuilder();
 
-                foreach (var envVar in executionConfiguration.EnvironmentVariables)
-                {
-                    builder.Configuration[envVar.Key] = envVar.Value;
-                }
-
+                ConfigureConfiguration();
                 ConfigureLogging();
                 ConfigureOtel();
+
+                //TODO: Configure TLs based on certs?
                 await ConfigureUrls(builder, endpointAnnotation, ct);
 
                 return builder;
 
+                void ConfigureConfiguration()
+                {
+                    var args = executionConfiguration.Arguments.Select(x => x.Value).ToArray();
+                    var envVars = executionConfiguration.EnvironmentVariables.ToDictionary(x => x.Key, x => (string?)x.Value);
+                    builder.Configuration
+                        .AddCommandLine(args)
+                        .AddInMemoryCollection(envVars);                    
+                }
+
                 void ConfigureLogging()
                 {
                     builder.Services.AddSingleton(evt.Services.GetRequiredService<IConfigureOptions<LoggerFilterOptions>>());
-
-                    //builder.Logging.ClearProviders();
                     builder.Logging.AddProvider(new ForwardingLoggerProvider(evt.Logger));
                 }
 

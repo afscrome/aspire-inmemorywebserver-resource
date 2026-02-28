@@ -1,30 +1,16 @@
 using System.Net;
-using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Testing;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-
-#pragma warning disable EXTEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
 namespace Aspire.Hosting.InMemoryWebServer.Tests;
 
 public class BasicTests
 {
-    IDistributedApplicationTestingBuilder CreateBuilder()
-    {
-        var builder = DistributedApplicationTestingBuilder.Create();
-
-        // Reduce noise due to https://github.com/dotnet/aspire/issues/6788
-        builder.Services.ConfigureHttpClientDefaults(http => http.RemoveAllResilienceHandlers());
-        return builder;
-    }
-
     [Test]
-    [Timeout(30_000)]
+    [Timeout(Common.TimeoutSeconds)]
     public async Task BasicEndpointResponds(CancellationToken cancellationToken)
     {
-        using var builder = CreateBuilder();
+        using var builder = Common.CreateBuilder();
 
         var server = builder.AddInMemoryWebserver("test", builder =>
         {
