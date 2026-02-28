@@ -1,10 +1,5 @@
-using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.Testing;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-
-#pragma warning disable EXTEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
 namespace Aspire.Hosting.InMemoryWebServer.Tests;
 
