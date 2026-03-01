@@ -38,49 +38,37 @@ jobs:
           # Create directory for provenance
           mkdir -p provenance
 
-          # Generate checksums and create provenance subject
+          # Generate checksums and create provenance subject in SLSA format
           cd artifacts/
 
-          # Create a list of all artifacts with their checksums
+          # Create a list of all artifacts with their checksums in SLSA format
           echo "Generating file checksums and provenance metadata..."
           
-          # Build JSON properly using jq
-          artifacts_json="[]"
+          # Build SLSA subjects JSON array (SLSA format requires uri and digest)
+          subjects_json="[]"
+          
           for file in $(find . -type f ! -name '.*' | sort); do
             file_hash=$(sha256sum "$file" | awk '{print $1}')
-            file_size=$(stat -c%s "$file" 2>/dev/null || stat -f%z "$file" 2>/dev/null || echo "0")
-            file_name=$(basename "$file")
             
-            artifacts_json=$(echo "$artifacts_json" | jq \
-              --arg name "$file_name" \
+            # Create subject entry in SLSA format
+            # uri format: can be a simple path or full URI
+            subjects_json=$(echo "$subjects_json" | jq \
+              --arg uri "$file" \
               --arg hash "$file_hash" \
-              --argjson size "$file_size" \
-              '. += [{"name": $name, "sha256": $hash, "size": $size}]')
+              '. += [{"uri": $uri, "digest": {"sha256": $hash}}]')
           done
           
-          # Create the final provenance JSON
-          cat > ../provenance/subject.json <<EOF
-          {
-            "artifacts": $(echo "$artifacts_json" | jq -c .),
-            "build_metadata": {
-              "repository": "${{ github.repository }}",
-              "commit_sha": "${{ github.sha }}",
-              "ref": "${{ github.ref }}",
-              "workflow": "${{ github.workflow }}",
-              "workflow_path": "${{ github.workflow_ref }}",
-              "event": "${{ github.event_name }}"
-            }
-          }
-          EOF
-
+          # Save subjects in SLSA-compliant format
+          echo "$subjects_json" | jq . > ../provenance/subject.json
+          
           # Convert to base64 for SLSA framework
           subject_b64=$(cat ../provenance/subject.json | base64 -w0)
           echo "subject=$subject_b64" >> $GITHUB_OUTPUT
           
-          # Also save pretty-printed version for inspection
-          jq . ../provenance/subject.json > ../provenance/subject-pretty.json
-          
           echo "Provenance subject generated successfully"
+          echo "SLSA Subjects:"
+          jq . ../provenance/subject.json
+          echo ""
           echo "Files included:"
           find . -type f ! -name '.*' | sort
 
