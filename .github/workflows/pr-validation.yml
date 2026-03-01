@@ -11,53 +11,53 @@ permissions:
 
 jobs:
   build:
-    name: Build & Test
+    name: 🛠️ Build & Test
     runs-on: ubuntu-latest
     outputs:
       artifact-id: ${{ steps.upload.outputs.artifact-id }}
       build-output-dir: ${{ steps.paths.outputs.build-output-dir }}
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Full history needed for provenance
 
-      - name: Setup .NET
+      - name: 🟦 Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
           cache: true
           cache-dependency-path: 'Directory.Packages.props'
 
-      - name: Setup Node.js for frontend
+      - name: 🟩 Setup Node.js for frontend
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: 'app/Frontend/package-lock.json'
 
-      - name: Restore .NET dependencies
+      - name: 📦 Restore .NET dependencies
         run: dotnet restore
 
-      - name: Build solution
+      - name: 🏗️ Build solution
         run: dotnet build --configuration Release --no-restore
 
-      - name: Build frontend
+      - name: 🌐 Build frontend
         working-directory: app/Frontend
         run: |
           npm install
           npm run build
 
-      - name: Run tests
+      - name: 🧪 Run tests
         run: dotnet test --configuration Release --no-build --logger trx --verbosity normal
         continue-on-error: false
 
-      - name: Set build output paths
+      - name: 🗂️ Set build output paths
         id: paths
         run: |
           echo "build-output-dir=${{ github.workspace }}/build-output" >> $GITHUB_OUTPUT
 
-      - name: Collect artifacts
+      - name: 📦 Collect artifacts
         run: |
           mkdir -p ${{ steps.paths.outputs.build-output-dir }}
           
@@ -84,7 +84,7 @@ jobs:
           }
           EOF
 
-      - name: Upload build artifacts
+      - name: ☁️ Upload build artifacts
         id: upload
         uses: actions/upload-artifact@v4
         with:
@@ -92,7 +92,7 @@ jobs:
           path: ${{ steps.paths.outputs.build-output-dir }}
           retention-days: 5
 
-      - name: Upload test results
+      - name: 📊 Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -101,7 +101,7 @@ jobs:
           retention-days: 5
 
   slsa-builder:
-    name: SLSA Build Provenance (L3)
+    name: 🧬 SLSA Build Provenance (L3)
     needs: build
     permissions:
       id-token: write
@@ -111,7 +111,7 @@ jobs:
       artifact-name: build-artifacts
 
   slsa-provenance:
-    name: SLSA Sign & Attest
+    name: ✍️ SLSA Sign & Attest
     needs: [build, slsa-builder]
     permissions:
       id-token: write
@@ -124,27 +124,27 @@ jobs:
       compile-generator: true
 
   verification:
-    name: Verify SLSA Provenance
+    name: 🔏 Verify SLSA Provenance
     needs: slsa-provenance
     runs-on: ubuntu-latest
     steps:
-      - name: Download artifacts
+      - name: 📦 Download artifacts
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
 
-      - name: Download provenance
+      - name: 📜 Download provenance
         uses: actions/download-artifact@v4
         with:
           name: ${{ needs.slsa-provenance.outputs.attestation-name }}
 
-      - name: Install slsa-verifier
+      - name: 🛠️ Install slsa-verifier
         run: |
           wget https://github.com/slsa-framework/slsa-verifier/releases/download/v2.5.1/slsa-verifier-linux-amd64
           chmod +x slsa-verifier-linux-amd64
           sudo mv slsa-verifier-linux-amd64 /usr/local/bin/slsa-verifier
 
-      - name: Verify provenance
+      - name: ✅ Verify provenance
         run: |
           echo "Provenance attestation generated successfully"
           echo "Repository: ${{ github.repository }}"

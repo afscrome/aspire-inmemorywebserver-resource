@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   verify-provenance:
-    name: Verify SLSA Provenance
+    name: 🔏 Verify SLSA Provenance
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     
@@ -24,13 +24,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download provenance artifacts
+      - name: 📦 Download provenance artifacts
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
           path: artifacts/
 
-      - name: Install SLSA verifier
+      - name: 🛠️ Install SLSA verifier
         run: |
           # Download the latest SLSA verifier
           wget https://github.com/slsa-framework/slsa-verifier/releases/download/v2.5.1/slsa-verifier-linux-amd64
@@ -39,7 +39,7 @@ jobs:
           
           slsa-verifier --version
 
-      - name: Check provenance artifacts
+      - name: 🔎 Check provenance artifacts
         run: |
           echo "=== Listing all artifacts ==="
           ls -lah artifacts/ || echo "No artifacts directory found"
@@ -53,14 +53,14 @@ jobs:
             echo "No .intoto.jsonl files found - this is expected for in-progress builds"
           fi
 
-      - name: Display build metadata
+      - name: 📝 Display build metadata
         run: |
           if [ -f "artifacts/BUILD_METADATA.json" ]; then
             echo "=== Build Metadata ==="
             cat artifacts/BUILD_METADATA.json | jq .
           fi
 
-      - name: Verify provenance validity
+      - name: ✅ Verify provenance validity
         continue-on-error: true
         run: |
           echo "=== SLSA Provenance Verification ==="
@@ -78,7 +78,7 @@ jobs:
           echo "Provenance attestations are available in GitHub Actions artifacts"
           echo "and can be retrieved using actions/download-artifact."
 
-      - name: Summary
+      - name: 📋 Summary
         run: |
           echo "## SLSA L3 Provenance Verification Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

@@ -17,18 +17,18 @@ permissions:
 
 jobs:
   slsa-builder:
-    name: Generate SLSA Provenance Subject
+    name: 🧬 Generate SLSA Provenance Subject
     runs-on: ubuntu-latest
     outputs:
       subject: ${{ steps.subject.outputs.subject }}
     steps:
-      - name: Download build artifacts
+      - name: 📦 Download build artifacts
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.artifact-name }}
           path: artifacts/
 
-      - name: Generate provenance subject
+      - name: 📝 Generate provenance subject
         id: subject
         run: |
           # Install required tools
@@ -91,7 +91,7 @@ jobs:
           echo "Files included:"
           find . -type f ! -name '.*' | sort
 
-      - name: Upload provenance metadata
+      - name: ☁️ Upload provenance metadata
         uses: actions/upload-artifact@v4
         with:
           name: slsa-build-provenance-metadata
