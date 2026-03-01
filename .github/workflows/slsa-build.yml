@@ -31,46 +31,24 @@ jobs:
       - name: 📝 Generate provenance subject
         id: subject
         run: |
-          # Install required tools
-          sudo apt-get update
-          sudo apt-get install -y jq
-
           # Create directory for provenance
           mkdir -p provenance
 
-          # Generate checksums and create provenance subject in SLSA format
+          # Generate checksums in sha256sum format (expected by SLSA)
           cd artifacts/
 
-          # Create a list of all artifacts with their checksums in SLSA format
-          echo "Generating file checksums and provenance metadata..."
+          # Create a sha256sum format file (standard from sha256sum command)
+          echo "Generating file checksums for SLSA provenance..."
           
-          # Build SLSA subjects JSON array (SLSA format requires uri and digest)
-          subjects_json="[]"
-          
-          for file in $(find . -type f ! -name '.*' | sort); do
-            file_hash=$(sha256sum "$file" | awk '{print $1}')
-            
-            # Create subject entry in SLSA format
-            # uri format: can be a simple path or full URI
-            subjects_json=$(echo "$subjects_json" | jq \
-              --arg uri "$file" \
-              --arg hash "$file_hash" \
-              '. += [{"uri": $uri, "digest": {"sha256": $hash}}]')
-          done
-          
-          # Save subjects in SLSA-compliant format
-          echo "$subjects_json" | jq . > ../provenance/subject.json
+          sha256sum $(find . -type f ! -name '.*' | sort) > ../provenance/subject.sha256sum
           
           # Convert to base64 for SLSA framework
-          subject_b64=$(cat ../provenance/subject.json | base64 -w0)
+          subject_b64=$(cat ../provenance/subject.sha256sum | base64 -w0)
           echo "subject=$subject_b64" >> $GITHUB_OUTPUT
           
           echo "Provenance subject generated successfully"
-          echo "SLSA Subjects:"
-          jq . ../provenance/subject.json
-          echo ""
-          echo "Files included:"
-          find . -type f ! -name '.*' | sort
+          echo "SLSA Subjects (sha256sum format):"
+          cat ../provenance/subject.sha256sum
 
       - name: ☁️ Upload provenance metadata
         uses: actions/upload-artifact@v4
