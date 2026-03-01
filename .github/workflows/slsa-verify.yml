@@ -11,8 +11,8 @@ on:
         required: false
 
 permissions:
-  id-token: read
   contents: read
+  actions: read
 
 jobs:
   verify-provenance:
