@@ -56,7 +56,7 @@ jobs:
               
               # Get file hash
               file_hash=$(sha256sum "$file" | awk '{print $1}')
-              file_size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file")
+              file_size=$(stat -c%s "$file")
               
               echo -n "    {"
               echo -n '      "name": "'$(basename "$file")'",'

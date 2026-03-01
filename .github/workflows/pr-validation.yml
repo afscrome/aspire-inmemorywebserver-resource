@@ -49,7 +49,7 @@ jobs:
           npm run build
 
       - name: 🧪 Run tests
-        run: dotnet test --configuration Release --no-build --logger trx --verbosity normal
+        run: dotnet test --configuration Release --no-build --report-trx
         continue-on-error: false
 
       - name: 🗂️ Set build output paths
