@@ -42,6 +42,9 @@ jobs:
       - name: 🏗️ Build solution
         run: dotnet build --configuration Release --no-restore
 
+      - name: 📦 Pack NuGet packages
+        run: dotnet pack --configuration Release --no-build --no-restore
+
       - name: 🌐 Build frontend
         working-directory: app/Frontend
         run: |
@@ -87,8 +90,9 @@ jobs:
           mkdir -p ${{ steps.paths.outputs.build-output-dir }}
           
           # Collect compiled assemblies and packages from all projects
-          find . -name "*.dll" -path "*/bin/Release/*" -type f | head -20 | xargs -I {} cp {} ${{ steps.paths.outputs.build-output-dir }}/ 2>/dev/null || true
-          find . -name "*.nupkg" -path "*/bin/Release/*" -type f | xargs -I {} cp {} ${{ steps.paths.outputs.build-output-dir }}/ 2>/dev/null || true
+          # Support both UseArtifactsOutput (artifacts/bin) and legacy (bin/Release) layouts
+          find . \( -path "*/artifacts/bin/*" -o -path "*/bin/Release/*" \) -name "*.dll" -type f | head -20 | xargs -I {} cp {} ${{ steps.paths.outputs.build-output-dir }}/ 2>/dev/null || true
+          find . \( -path "*/artifacts/package/*" -o -path "*/bin/Release/*" \) -name "*.nupkg" -type f | xargs -I {} cp {} ${{ steps.paths.outputs.build-output-dir }}/ 2>/dev/null || true
           
           # Include frontend build output
           if [ -d "app/Frontend/dist" ]; then
