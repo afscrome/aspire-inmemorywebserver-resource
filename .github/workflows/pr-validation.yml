@@ -50,6 +50,9 @@ jobs:
 
       - name: 🔐 Setup HTTPS certificate for tests
         run: dotnet dev-certs https --clean && dotnet dev-certs https --trust
+        # Workaround for https://github.com/dotnet/aspnetcore/issues/65391
+        env:
+          WSL_INTEROP: ""        
           
       - name: 🧪 Run tests
         env:
