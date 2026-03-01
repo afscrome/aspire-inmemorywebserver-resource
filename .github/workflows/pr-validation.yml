@@ -42,7 +42,13 @@ jobs:
       - name: 🏗️ Build solution
         run: dotnet build --configuration Release --no-restore
 
-      - name: 📦 Pack NuGet packages\n        run: |\n          # Find all .csproj files (excluding non-.NET projects like .esproj)\n          find . -name \"*.csproj\" -type f -not -path \"*/obj/*\" -not -path \"*/bin/*\" | while read csproj; do\n            echo \"Packing $csproj\"\n            dotnet pack \"$csproj\" --configuration Release --no-build --no-restore\n          done
+      - name: 📦 Pack NuGet packages
+        run: |
+          # Find all .csproj files (excluding non-.NET projects like .esproj)
+          find . -name "*.csproj" -type f -not -path "*/obj/*" -not -path "*/bin/*" | while read csproj; do
+            echo "Packing $csproj"
+            dotnet pack "$csproj" --configuration Release --no-build --no-restore
+          done
 
       - name: 🌐 Build frontend
         working-directory: app/Frontend
