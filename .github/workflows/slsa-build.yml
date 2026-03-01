@@ -1,0 +1,99 @@
+name: SLSA Build Provenance
+on:
+  workflow_call:
+    inputs:
+      artifact-name:
+        description: 'Name of the artifact to generate provenance for'
+        required: true
+        type: string
+    outputs:
+      provenance-subject:
+        description: 'Base64-encoded provenance subject for SLSA generator'
+        value: ${{ jobs.slsa-builder.outputs.subject }}
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  slsa-builder:
+    name: Generate SLSA Provenance Subject
+    runs-on: ubuntu-latest
+    outputs:
+      subject: ${{ steps.subject.outputs.subject }}
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: artifacts/
+
+      - name: Generate provenance subject
+        id: subject
+        run: |
+          # Install required tools
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+          # Create directory for provenance
+          mkdir -p provenance
+
+          # Generate checksums and create provenance subject
+          cd artifacts/
+
+          # Create a list of all artifacts with their checksums
+          echo "Generating file checksums and provenance metadata..."
+          
+          {
+            echo "{"
+            echo '  "artifacts": ['
+            
+            first=true
+            for file in $(find . -type f ! -name '.*'); do
+              if [ "$first" = false ]; then
+                echo ","
+              fi
+              
+              # Get file hash
+              file_hash=$(sha256sum "$file" | awk '{print $1}')
+              file_size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file")
+              
+              echo -n "    {"
+              echo -n '      "name": "'$(basename "$file")'",'
+              echo -n '      "sha256": "'$file_hash'",'
+              echo -n '      "size": '$file_size
+              echo -n "    }"
+              
+              first=false
+            done
+            
+            echo ""
+            echo "  ],"
+            echo '  "build_metadata": {'
+            echo '    "repository": "${{ github.repository }}",'
+            echo '    "commit_sha": "${{ github.sha }}",'
+            echo '    "ref": "${{ github.ref }}",'
+            echo '    "workflow": "${{ github.workflow }}",'
+            echo '    "workflow_path": "${{ github.workflow_ref }}",'
+            echo '    "event": "${{ github.event_name }}"'
+            echo "  }"
+            echo "}"
+          } > ../provenance/subject.json
+
+          # Convert to base64 for SLSA framework
+          subject_b64=$(cat ../provenance/subject.json | base64 -w0)
+          echo "subject=$subject_b64" >> $GITHUB_OUTPUT
+          
+          # Also save pretty-printed version for inspection
+          jq . ../provenance/subject.json > ../provenance/subject-pretty.json
+          
+          echo "Provenance subject generated successfully"
+          echo "Files included:"
+          find . -type f ! -name '.*' | sort
+
+      - name: Upload provenance metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: slsa-build-provenance-metadata
+          path: provenance/
+          retention-days: 5
