@@ -2,5 +2,6 @@
   <PropertyGroup>
     <ShouldRunNpmInstall>false</ShouldRunNpmInstall>
     <ShouldRunBuildScript>false</ShouldRunBuildScript>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 </Project>
