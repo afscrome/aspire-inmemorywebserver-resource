@@ -40,10 +40,7 @@ jobs:
         run: dotnet restore
 
       - name: 🏗️ Build solution
-        run: dotnet build --configuration Release --no-restore
-
-      - name: 📦 Pack NuGet packages
-        run: dotnet pack --configuration Release --no-build --no-restore
+        run: dotnet build --configuration Release --no-restore -bl:${{ runner.temp }}/binlog/build.binlog
 
       - name: 🌐 Build frontend
         working-directory: app/Frontend
@@ -52,33 +49,17 @@ jobs:
           npm run build
 
       - name: 🔐 Setup HTTPS certificate for tests
-        run: |
-          # Generate the ASP.NET Core development certificate
-          dotnet dev-certs https --clean 2>/dev/null || true
-          dotnet dev-certs https
-          
-          # Export and trust the certificate in the system
-          # First, try to export the certificate
-          dotnet dev-certs https --export-path /tmp/aspnet-dev.pfx --password testpassword 2>/dev/null || true
-          
-          # If export was successful, add to system trust
-          if [ -f /tmp/aspnet-dev.pfx ]; then
-            # Convert to PEM format
-            echo "testpassword" | openssl pkcs12 -in /tmp/aspnet-dev.pfx -out /tmp/aspnet-dev.crt -clcerts -nokeys -passin stdin
-            
-            # Add to system trust store
-            sudo cp /tmp/aspnet-dev.crt /usr/local/share/ca-certificates/aspnet-dev.crt
-            sudo update-ca-certificates
-            
-            # Clean up
-            rm /tmp/aspnet-dev.pfx /tmp/aspnet-dev.crt
-          fi
+        run: dotnet dev-certs https --clean && dotnet dev-certs https --trust
           
       - name: 🧪 Run tests
         env:
           ASPNETCORE_ENVIRONMENT: Development
-        run: dotnet test --configuration Release --no-build --report-trx
+        run: dotnet test --configuration Release --no-build --report-trx -bl:${{ runner.temp }}/binlog/test.binlog
         continue-on-error: false
+
+      - name: 📦 Pack NuGet packages
+        run: dotnet pack --configuration Release --no-build --no-restore -bl:${{ runner.temp }}/binlog/pack.binlog
+
 
       - name: 🗂️ Set build output paths
         id: paths
@@ -113,6 +94,14 @@ jobs:
         with:
           name: test-results
           path: '**/TestResults/**'
+          retention-days: 5
+
+      - name: 📋 Upload binlogs
+        if: failure() || runner.debug == '1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: binlogs
+          path: '${{ runner.temp }}/binlog/'
           retention-days: 5
 
   # SLSA Level 3: Attestation generation in isolated reusable workflow
