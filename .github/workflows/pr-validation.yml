@@ -27,7 +27,7 @@ jobs:
         with:
           dotnet-version: '10.0.x'
           cache: true
-          cache-dependency-path: '**/packages.lock.json'
+          cache-dependency-path: 'Directory.Packages.props'
 
       - name: Setup Node.js for frontend
         uses: actions/setup-node@v4
