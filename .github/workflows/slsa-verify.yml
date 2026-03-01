@@ -1,4 +1,4 @@
-name: [32m🔍 SLSA Provenance Verification[0m
+name: 🔍 SLSA Provenance Verification
 
 on:
   workflow_run:

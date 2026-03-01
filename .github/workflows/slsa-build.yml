@@ -1,4 +1,4 @@
-name: [34m🏗️ SLSA Build Provenance[0m
+name: 🏗️ SLSA Build Provenance
 on:
   workflow_call:
     inputs:

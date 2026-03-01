@@ -1,4 +1,4 @@
-name: [35m✅ PR Validation with SLSA L3[0m
+name: ✅ PR Validation with SLSA L3
 
 on:
   pull_request:
