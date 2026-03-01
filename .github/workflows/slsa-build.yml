@@ -44,41 +44,34 @@ jobs:
           # Create a list of all artifacts with their checksums
           echo "Generating file checksums and provenance metadata..."
           
+          # Build JSON properly using jq
+          artifacts_json="[]"
+          for file in $(find . -type f ! -name '.*' | sort); do
+            file_hash=$(sha256sum "$file" | awk '{print $1}')
+            file_size=$(stat -c%s "$file" 2>/dev/null || stat -f%z "$file" 2>/dev/null || echo "0")
+            file_name=$(basename "$file")
+            
+            artifacts_json=$(echo "$artifacts_json" | jq \
+              --arg name "$file_name" \
+              --arg hash "$file_hash" \
+              --argjson size "$file_size" \
+              '. += [{"name": $name, "sha256": $hash, "size": $size}]')
+          done
+          
+          # Create the final provenance JSON
+          cat > ../provenance/subject.json <<EOF
           {
-            echo "{"
-            echo '  "artifacts": ['
-            
-            first=true
-            for file in $(find . -type f ! -name '.*'); do
-              if [ "$first" = false ]; then
-                echo ","
-              fi
-              
-              # Get file hash
-              file_hash=$(sha256sum "$file" | awk '{print $1}')
-              file_size=$(stat -c%s "$file")
-              
-              echo -n "    {"
-              echo -n '      "name": "'$(basename "$file")'",'
-              echo -n '      "sha256": "'$file_hash'",'
-              echo -n '      "size": '$file_size
-              echo -n "    }"
-              
-              first=false
-            done
-            
-            echo ""
-            echo "  ],"
-            echo '  "build_metadata": {'
-            echo '    "repository": "${{ github.repository }}",'
-            echo '    "commit_sha": "${{ github.sha }}",'
-            echo '    "ref": "${{ github.ref }}",'
-            echo '    "workflow": "${{ github.workflow }}",'
-            echo '    "workflow_path": "${{ github.workflow_ref }}",'
-            echo '    "event": "${{ github.event_name }}"'
-            echo "  }"
-            echo "}"
-          } > ../provenance/subject.json
+            "artifacts": $(echo "$artifacts_json" | jq -c .),
+            "build_metadata": {
+              "repository": "${{ github.repository }}",
+              "commit_sha": "${{ github.sha }}",
+              "ref": "${{ github.ref }}",
+              "workflow": "${{ github.workflow }}",
+              "workflow_path": "${{ github.workflow_ref }}",
+              "event": "${{ github.event_name }}"
+            }
+          }
+          EOF
 
           # Convert to base64 for SLSA framework
           subject_b64=$(cat ../provenance/subject.json | base64 -w0)

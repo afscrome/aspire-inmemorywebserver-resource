@@ -132,11 +132,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
+          path: build-artifacts
 
-      - name: 📜 Download provenance
+      - name: 📜 Download provenance attestation
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.slsa-provenance.outputs.attestation-name }}
+          path: attestations
 
       - name: 🛠️ Install slsa-verifier
         run: |
@@ -149,4 +150,8 @@ jobs:
           echo "Provenance attestation generated successfully"
           echo "Repository: ${{ github.repository }}"
           echo "Commit: ${{ github.sha }}"
+          echo ""
+          echo "Available artifacts:"
+          find . -type f | head -20
+          echo ""
           echo "Artifact attestations are available in workflow artifacts"
