@@ -24,7 +24,7 @@ public class BasicTests
 
         await app.ResourceNotifications.WaitForResourceAsync(server.Resource.Name, KnownResourceStates.Running, cancellationToken);
 
-        using var client = app.CreateHttpClient(server.Resource.Name, "http");
+        using var client = app.CreateHttpClient(server.Resource.Name, "https");
 
         var response = await client.GetAsync("", cancellationToken);
 
