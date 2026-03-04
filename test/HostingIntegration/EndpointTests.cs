@@ -72,8 +72,12 @@ public class EndpointTests
                 {
                     var endpoint = server.GetEndpoint("https", KnownNetworkIdentifiers.LocalhostNetwork);
                     var url = await endpoint.GetValueAsync(ctx.CancellationToken)
-                        ?? throw new InvalidOperationException("Failed to get endpoint URL");
+                        ?? throw new InvalidOperationException("Failed to get endpoint URL");                       
                     ctx.EnvironmentVariables["Endpoint"] = new HostUrl(url);
+
+                    // If I build a url directly with `host.docker.internal`, I can make this work
+                    //var directUrl = url.Replace("127.0.0.1", "host.docker.internal");
+                    //ctx.EnvironmentVariables["Endpoint"] = directUrl;
                 }
             })
             .WithArgs(
@@ -100,8 +104,10 @@ public class EndpointTests
 
         await Assert.That(containerState).IsEqualTo(KnownResourceStates.Exited);
 
-        var output = await loggerService.GetAllAsync(testContainer.Resource).LastAsync();
+        var output = await loggerService.GetAllAsync(testContainer.Resource).LastAsync(cancellationToken);
+        var lastLog = output.LastOrDefault();
 
-        await Assert.That(output).IsEqualTo("Hello Container");
+
+        await Assert.That(lastLog.Content).EndsWith("Hello Container");
     }
 }
