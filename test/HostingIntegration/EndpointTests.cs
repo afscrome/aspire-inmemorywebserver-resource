@@ -41,7 +41,9 @@ public class EndpointTests
 
         var requestReceived = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        var server = builder.AddInMemoryWebserver("test", builder =>
+        bool hasInited = false;
+
+        var server = builder.AddInMemoryWebserver("server", builder =>
         {
             var app = builder.Build();
             app.MapGet("", () =>
@@ -49,21 +51,41 @@ public class EndpointTests
                 return "Hello Container";
             });
             return Task.FromResult(app);
+        })
+        .OnInitializeResource((_,_,_) =>
+        {
+            // Workaround for https://github.com/dotnet/aspire/issues/14954
+            hasInited = true;
+            return Task.CompletedTask;
         });
 
         var testContainer = builder
             .AddContainer("testContainer", "mcr.microsoft.com/dotnet/sdk")
             .WithEntrypoint("pwsh")
-            .WithEnvironment("Endpoint", server.GetEndpoint("http"))
+            // This causes the test container to "FailToStart", without any clear logs I can find to indicate why
+            // May be another victim of #14954
+            //.WithEnvironment("Endpoint", server.GetEndpoint("http"))
+            .WithEnvironment(async ctx =>
+            {
+                // Workaround for https://github.com/dotnet/aspire/issues/14954
+                if (hasInited)
+                {
+                    var endpoint = server.GetEndpoint("https", KnownNetworkIdentifiers.LocalhostNetwork);
+                    var url = await endpoint.GetValueAsync(ctx.CancellationToken)
+                        ?? throw new InvalidOperationException("Failed to get endpoint URL");
+                    ctx.EnvironmentVariables["Endpoint"] = new HostUrl(url);
+                }
+            })
             .WithArgs(
                 "-NoLogo",
                 "-NoProfile",
                 "-Command",
                 """
-                Write-Host 'Hello World'
-                # Try work around https://github.com/dotnet/aspire/issues/13760
-                Start-Sleep -Seconds 5;
-                Invoke-RestMethod -Uri $endpoint -TimeoutSec 5
+                    $endpoint = $env:Endpoint
+                    Write-Host "🌍 Calling $endpoint"
+                    # Try work around https://github.com/dotnet/aspire/issues/13760
+                    Start-Sleep -Seconds 5;
+                    Invoke-RestMethod -Uri $endpoint -TimeoutSec 5
                 """)
             .WaitFor(server);
 
