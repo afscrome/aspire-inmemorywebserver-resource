@@ -37,6 +37,7 @@ jobs:
           cache-dependency-path: 'app/Frontend/package-lock.json'
 
       - name: 📦 Restore .NET dependencies
+        id: restore
         run: dotnet restore
 
       - name: 🏗️ Build solution
@@ -55,6 +56,7 @@ jobs:
           WSL_INTEROP: ""        
           
       - name: 🧪 Run tests
+        id: test
         env:
           ASPNETCORE_ENVIRONMENT: Development
         run: dotnet test --configuration Release --no-build --report-trx -bl:${{ runner.temp }}/binlog/test.binlog
@@ -92,7 +94,7 @@ jobs:
           retention-days: 5
 
       - name: 📊 Upload test results
-        if: always()
+        if: steps.test.outcome != 'skipped'
         uses: actions/upload-artifact@v4
         with:
           name: test-results
@@ -100,7 +102,7 @@ jobs:
           retention-days: 5
 
       - name: 📋 Upload binlogs
-        if: failure() || runner.debug == '1'
+        if: (failure() || runner.debug == '1') && steps.restore.outcome != 'skipped'
         uses: actions/upload-artifact@v4
         with:
           name: binlogs
