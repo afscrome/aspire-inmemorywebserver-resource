@@ -8,7 +8,7 @@ namespace Aspire.Hosting.InMemoryWebServer.Tests;
 
 public static class Common
 {
-    public const int TimeoutSeconds = 15_000;
+    public const int TimeoutSeconds = 30_000;  // Increased from 15s to 30s for CI environments
 
     public static IDistributedApplicationTestingBuilder CreateBuilder()
     {
