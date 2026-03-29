@@ -6,11 +6,15 @@
 
     <IsPackable>false</IsPackable>
     <IsPublishable>false</IsPublishable>
+
+    <!-- Enable Artifacts output layout -->
+    <UseArtifactsOutput>true</UseArtifactsOutput>
+    <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts</ArtifactsPath>
   </PropertyGroup>
 
   <PropertyGroup>
     <Authors>Alex Crome</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageTags Condition="'$(PackageTags)' == ''">aspire;dotnet;hosting</PackageTags>
+    <PackageTags>aspire;dotnet;hosting</PackageTags>
   </PropertyGroup>
 </Project>
