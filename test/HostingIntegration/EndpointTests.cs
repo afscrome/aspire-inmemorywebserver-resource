@@ -35,6 +35,8 @@ public class EndpointTests
 
     [Test]
     [Timeout(Common.TimeoutSeconds)]
+    // Broken due assumptions no longer correct after the tunnel has been enabled
+    // https://github.com/microsoft/aspire/issues/16640
     public async Task EndpointRespondsFromPwshContainer(CancellationToken cancellationToken)
     {
         using var builder = Common.CreateBuilder();
