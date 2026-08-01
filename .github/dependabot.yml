@@ -1,0 +1,39 @@
+version: 2
+updates:
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+    groups:
+      dotnet-core:
+        patterns:
+          - "System.*"
+          - "Microsoft.AspNetCore.*"
+          - "Microsoft.Extensions.*"
+      aspire-hosting:
+        patterns:
+          - "Aspire.AppHost.*"
+          - "Aspire.Hosting"
+          - "Aspire.Hosting.*"
+      open-telemetry:
+        patterns:
+          - "OpenTelemetry"
+          - "OpenTelemetry.*"
+
+  - package-ecosystem: "npm"
+    directory: "/app/Frontend"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "dotnet-sdk"
+    directory: "/"
+    schedule:
+      # Third tuesday of month
+      interval: "cron"
+      cronjob: "0 0 15-21 * 2"

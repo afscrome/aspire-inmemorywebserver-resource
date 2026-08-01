@@ -2,7 +2,7 @@
   <Folder Name="/app/">
     <Project Path="app/AppHost/Aspire.InMemoryWebServer.AppHost.csproj" />
     <Project Path="app/Backend/Aspire.InMemoryWebServer.Server.csproj" />
-    <Project Path="app/frontend/frontend.esproj">
+    <Project Path="app/Frontend/frontend.esproj">
       <Build />
     </Project>
   </Folder>
