@@ -202,10 +202,10 @@ public static class InMemoryWebserverResourceExtensions
 
         var actualUri = new Uri(actualAddress);
 
-        var hostEndpoint = new AllocatedEndpoint(endpointAnnotation, actualUri.Host, actualUri.Port, EndpointBindingMode.SingleAddress, networkID: KnownNetworkIdentifiers.LocalhostNetwork);
+        var hostEndpoint = new AllocatedEndpoint(endpointAnnotation, actualUri.Host, actualUri.Port, EndpointBindingMode.SingleAddress, networkId: KnownNetworkIdentifiers.LocalhostNetwork);
 
         var containerHostName = GetContainerHostName(evt.Services);
-        var containerAllocatedEndpoint = new AllocatedEndpoint(endpointAnnotation, containerHostName, actualUri.Port, EndpointBindingMode.SingleAddress, networkID: KnownNetworkIdentifiers.DefaultAspireContainerNetwork);
+        var containerAllocatedEndpoint = new AllocatedEndpoint(endpointAnnotation, containerHostName, actualUri.Port, EndpointBindingMode.SingleAddress, networkId: KnownNetworkIdentifiers.DefaultAspireContainerNetwork);
 
         endpointAnnotation.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(KnownNetworkIdentifiers.LocalhostNetwork, hostEndpoint);
         endpointAnnotation.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(KnownNetworkIdentifiers.DefaultAspireContainerNetwork, containerAllocatedEndpoint);
