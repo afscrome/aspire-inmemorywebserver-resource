@@ -5,6 +5,9 @@
     <UserSecretsId>4141572c-1ce1-424e-9687-ae8f34991b67</UserSecretsId>
     <OutputType>Library</OutputType>
     <!--<GenerateDocumentationFile>true</GenerateDocumentationFile>-->
+    
+    <!-- Enable NuGet package generation -->
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>

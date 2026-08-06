@@ -1,0 +1,44 @@
+name: ✍️ Attest Artifacts (SLSA L3)
+
+# Reusable workflow for signing artifacts with SLSA provenance attestations
+# This workflow is isolated from build steps to meet SLSA Level 3 requirements
+
+on:
+  workflow_call:
+    inputs:
+      artifact-name:
+        description: 'Name of the artifact to attest'
+        required: false
+        type: string
+        default: 'build-artifacts'
+      subject-path:
+        description: 'Path pattern for artifacts to sign'
+        required: false
+        type: string
+        default: 'build-output/*'
+
+# SLSA Level 3: This workflow has privileged access to signing credentials
+# Build workflows that call this MUST NOT have these permissions
+permissions:
+  id-token: write      # Required for OIDC token generation with Sigstore
+  contents: read       # Required for repository checkout
+  attestations: write  # Required for GitHub artifact attestations
+  actions: read        # Required for workflow metadata
+
+jobs:
+  sign:
+    name: ✍️ Sign Artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: build-output
+
+      - name: ✍️ Generate SLSA provenance attestation
+        uses: actions/attest@v1
+        with:
+          subject-path: ${{ inputs.subject-path }}
+          predicate-type: 'https://slsa.dev/provenance/v1'
+
